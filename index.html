@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Work Agent - Registro profesional de horarios de trabajo" />
+  <title>Work Agent</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-hover: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #334155;
+      --radius: 16px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --card-hover: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding-bottom: 80px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0 20px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 50;
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .header-actions { display: flex; gap: 8px; }
+    .icon-btn {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      border: none;
+      background: var(--card);
+      color: var(--text);
+      font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .icon-btn:active { background: var(--card-hover); }
+
+    /* Status Card */
+    .status-card {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      border-radius: var(--radius);
+      padding: 24px;
+      color: white;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    [data-theme="light"] .status-card {
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+    }
+    .status-card.working {
+      background: linear-gradient(135deg, #166534, #22c55e);
+    }
+    .status-card.break {
+      background: linear-gradient(135deg, #92400e, #f59e0b);
+    }
+    .status-label { font-size: 0.9rem; opacity: 0.9; margin-bottom: 4px; }
+    .status-time { font-size: 2.8rem; font-weight: 700; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+    .status-sub { font-size: 0.95rem; opacity: 0.85; margin-top: 6px; }
+
+    /* Action Buttons */
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .btn {
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-warning { background: var(--warning); color: #1c1917; }
+    .btn-outline {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn:disabled { opacity: 0.45; pointer-events: none; }
+    .btn span { font-size: 1.5rem; }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-item { text-align: center; padding: 12px 8px; background: var(--bg); border-radius: 12px; }
+    .stat-value { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* Project selector */
+    .project-select {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      margin-bottom: 12px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+    }
+
+    /* History */
+    .entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .entry:last-child { border-bottom: none; }
+    .entry-left { flex: 1; min-width: 0; }
+    .entry-project { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry-times { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+    .entry-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-style: italic; }
+    .entry-right { text-align: right; flex-shrink: 0; }
+    .entry-hours { font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+    .entry-date { font-size: 0.75rem; color: var(--text-muted); }
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .badge-work { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .badge-break { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .badge-extra { background: rgba(59,130,246,0.15); color: #3b82f6; }
+
+    /* Bottom Nav */
+    nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+      z-index: 100;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 12px;
+      transition: color 0.2s;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-item span { font-size: 1.4rem; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 200;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--card);
+      width: 100%; max-width: 480px;
+      border-radius: 24px 24px 0 0;
+      padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 90dvh;
+      overflow-y: auto;
+    }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 1.25rem; font-weight: 700; }
+    .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 14px;border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .modal-actions { display: flex; gap: 12px; margin-top: 8px; }
+    .modal-actions .btn { flex: 1; padding: 14px; }
+
+    /* Empty state */
+    .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .empty span { font-size: 3rem; display: block; margin-bottom: 12px; }
+
+    /* AI Insights */
+    .insight-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid var(--primary);
+      box-shadow: var(--shadow);
+    }
+    .insight-card.good { border-left-color: var(--success); }
+    .insight-card.warn { border-left-color: var(--warning); }
+    .insight-card.bad { border-left-color: var(--danger); }
+    .insight-card.info { border-left-color: #8b5cf6; }
+    .insight-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .insight-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.45; }
+    .ai-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .ai-avatar {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+    }
+    .ai-score {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Charts simple bars */
+    .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; margin-top: 12px; }
+    .bar {
+      flex: 1;
+      background: var(--primary);
+      border-radius: 6px 6px 0 0;
+      min-height: 4px;
+      position: relative;
+      transition: height 0.4s;
+    }
+    .bar-label {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* Settings */
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .toggle {
+      width: 52px; height: 30px;
+      background: var(--border);
+      border-radius: 20px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle.on { background: var(--primary); }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 24px; height: 24px;
+      background: white;
+      border-radius: 50%;
+      top: 3px; left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle.on::after { transform: translateX(22px); }
+
+    .hidden { display: none !important; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--card);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 300;
+      border: 1px solid var(--border);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Install banner */
+    .install-banner {
+      background: var(--primary);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+    .install-banner button {
+      background: white;
+      color: var(--primary);
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">⏱️ Work Agent</div>
+      <div class="header-actions">
+        <button class="icon-btn" id="themeBtn" title="Tema">🌙</button>
+        <button class="icon-btn" id="settingsBtn" title="Ajustes">⚙️</button>
+      </div>
+    </header>
+
+    <!-- Install banner -->
+    <div class="install-banner hidden" id="installBanner">
+      <span>📲 Instala Work Agent como app</span>
+      <button id="installBtn">Instalar</button>
+    </div>
+
+    <!-- ========== PAGE: HOME ========== -->
+    <div class="page active" id="page-home">
+      <div class="status-card" id="statusCard">
+        <div class="status-label" id="statusLabel">Fuera de trabajo</div>
+        <div class="status-time" id="statusTime">00:00:00</div>
+        <div class="status-sub" id="statusSub">Pulsa "Entrada" para empezar</div>
+      </div>
+
+      <div class="actions" id="mainActions">
+        <button class="btn btn-success" id="btnClockIn">
+          <span>▶️</span> Entrada
+        </button>
+        <button class="btn btn-danger" id="btnClockOut" disabled>
+          <span>⏹️</span> Salida
+        </button>
+        <button class="btn btn-warning" id="btnBreak" disabled>
+          <span>☕</span> Pausa
+        </button>
+        <button class="btn btn-outline" id="btnResume" disabled>
+          <span>▶️</span> Continuar
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Proyecto actual</div>
+        <select class="project-select" id="projectSelect">
+          <option value="default">General</option>
+        </select>
+        <button class="btn btn-outline" style="width:100%;padding:12px;margin-top:4px;" id="manageProjectsBtn">
+          Gestionar proyectos
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Hoy</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="todayHours">0h 00m</div>
+            <div class="stat-label">Trabajadas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="todayBreaks">0h 00m</div>
+            <div class="stat-label">Pausas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="todayExtra">0h 00m</div>
+            <div class="stat-label">Extras</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="todaySessions">0</div>
+            <div class="stat-label">Sesiones</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PAGE: HISTORY ========== -->
+    <div class="page" id="page-history">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="card-title" style="margin:0;">Historial</div>
+          <select id="historyFilter" class="project-select" style="width:auto;padding:8px 32px 8px 12px;font-size:0.85rem;">
+            <option value="all">Todo</option>
+            <option value="today">Hoy</option>
+            <option value="week">Esta semana</option>
+            <option value="month">Este mes</option>
+          </select>
+        </div>
+        <div id="historyList"></div>
+        <div class="empty hidden" id="historyEmpty">
+          <span>📋</span>
+          No hay registros todavía
+        </div>
+      </div>
+      <button class="btn btn-outline" style="width:100%;" id="exportBtn">📤 Exportar CSV</button>
+    </div>
+
+    <!-- ========== PAGE: STATS ========== -->
+    <div class="page" id="page-stats">
+      <div class="card">
+        <div class="card-title">Esta semana</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="weekHours">0h</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="weekAvg">0h</div><div class="stat-label">Media/día</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="weekDays">0</div>
+            <div class="stat-label">Días activos</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="weekExtra">0h</div>
+            <div class="stat-label">Extras</div>
+          </div>
+        </div>
+        <div class="bar-chart" id="weekChart"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Este mes</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="monthHours">0h</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="monthExtra">0h</div>
+            <div class="stat-label">Extras</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Totales</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="totalHours">0h</div>
+            <div class="stat-label">Horas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="totalDays">0</div>
+            <div class="stat-label">Días</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PAGE: PROJECTS ========== -->
+    <div class="page" id="page-projects">
+      <div class="card">
+        <div class="card-title">Proyectos / Clientes</div>
+        <div id="projectsList"></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:12px;" id="addProjectBtn">
+          ➕ Nuevo proyecto
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== PAGE: AI ========== -->
+    <div class="page" id="page-ai">
+      <div class="ai-header">
+        <div class="ai-avatar">🤖</div>
+        <div>
+          <div style="font-weight:700;font-size:1.1rem;">Asistente IA</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);">Análisis inteligente de tus horarios</div>
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:4px;">Puntuación de productividad</div>
+        <div class="ai-score" id="aiScore">—</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);" id="aiScoreLabel">Calculando...</div>
+      </div>
+
+      <div id="aiInsights"></div>
+
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" id="refreshAiBtn">
+        🔄 Actualizar análisis
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav>
+    <button class="nav-item active" data-page="home">
+      <span>🏠</span> Inicio
+    </button>
+    <button class="nav-item" data-page="history">
+      <span>📋</span> Historial
+    </button>
+    <button class="nav-item" data-page="stats">
+      <span>📊</span> Stats
+    </button>
+    <button class="nav-item" data-page="ai">
+      <span>🤖</span> IA
+    </button>
+    <button class="nav-item" data-page="projects">
+      <span>📁</span> Proyectos
+    </button>
+  </nav>
+
+  <!-- Modal: Note / Manual entry -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Añadir nota</div>
+        <button class="close-btn" id="closeModal">×</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ==================== STATE ====================
+    const STORAGE_KEY = 'workagent_v2';
+    let state = {
+      theme: 'dark',
+      projects: [{ id: 'default', name: 'General', color: '#3b82f6' }],const btnResume = $('#btnResume');
+
+      if (!state.active) {
+        card.className = 'status-card';
+        label.textContent = 'Fuera de trabajo';
+        sub.textContent = 'Pulsa "Entrada" para empezar';
+        btnIn.disabled = false;
+        btnOut.disabled = true;
+        btnBreak.disabled = true;
+        btnResume.disabled = true;
+      } else if (state.active.type === 'work') {
+        card.className = 'status-card working';
+        label.textContent = 'Trabajando';
+        const proj = state.projects.find(p => p.id === state.active.project);
+        sub.textContent = `Desde ${formatTime(state.active.start)} · ${proj?.name || 'General'}`;
+        btnIn.disabled = true;
+        btnOut.disabled = false;
+        btnBreak.disabled = false;
+        btnResume.disabled = true;
+      } else {
+        card.className = 'status-card break';
+        label.textContent = 'En pausa';
+        sub.textContent = `Pausa desde ${formatTime(state.active.start)}`;
+        btnIn.disabled = true;
+        btnOut.disabled = false;
+        btnBreak.disabled = true;
+        btnResume.disabled = false;
+      }
+
+      updateTodayStats();
+      updateHistory();
+      updateStats();
+      updateProjectsUI();// ==================== STATS ====================
+    function updateStats() {
+      const weekStart = startOfWeek();
+      const monthStart = startOfMonth();
+      let weekWork = 0, monthWork = 0, totalWork = 0;
+      const daysSet = new Set();
+      const weekDays = {};
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + i);
+        weekDays[d.toDateString()] = 0;
+      }
+
+      state.entries.forEach(e => {
+        if (e.type !== 'work') return;
+        totalWork += e.duration;
+        daysSet.add(new Date(e.start).toDateString());
+
+        if (e.start >= weekStart) {
+          weekWork += e.duration;
+          const dayKey = new Date(e.start).toDateString();
+          if (weekDays[dayKey] !== undefined) weekDays[dayKey] += e.duration;
+        }
+        if (e.start >= monthStart) monthWork += e.duration;
+      });
+
+      if (state.active?.type === 'work') {
+        const cur = Date.now() - state.active.start;
+        totalWork += cur;
+        if (state.active.start >= weekStart) {
+          weekWork += cur;
+          const dayKey = new Date().toDateString();
+          if (weekDays[dayKey] !== undefined) weekDays[dayKey] += cur;
+        }
+        if (state.active.start >= monthStart) monthWork += cur;
+      }
+
+      const dailyTarget = state.settings.dailyHours * 3600000;
+      const activeDaysWeek = Object.values(weekDays).filter(v => v > 0).length;
+      const avg = activeDaysWeek > 0 ? weekWork / activeDaysWeek : 0;
+
+      $('#weekHours').textContent = formatDurationShort(weekWork);
+      $('#weekAvg').textContent = formatDurationShort(avg);
+      $('#weekDays').textContent = activeDaysWeek;
+      $('#weekExtra').textContent = formatDurationShort(Math.max(0, weekWork - activeDaysWeek * dailyTarget));
+      $('#monthHours').textContent = formatDurationShort(monthWork);
+      $('#monthExtra').textContent = formatDurationShort(Math.max(0, monthWork - 22 * dailyTarget));
+      $('#totalHours').textContent = formatDurationShort(totalWork);
+      $('#totalDays').textContent = daysSet.size;
+
+      const max = Math.max(...Object.values(weekDays), 1);
+      const labels = ['L','M','X','J','V','S','D'];
+      $('#weekChart').innerHTML = Object.values(weekDays).map((v, i) => {
+        const h = Math.max(4, (v / max) * 100);
+        return `<div class="bar" style="height:\( {h}%"><span class="bar-label"> \){labels[i]}</span></div>`;
+      }).join('');
+    }
+
+    // ==================== PROJECTS ====================
+    function updateProjectsUI() {
+      const select = $('#projectSelect');
+      select.innerHTML = state.projects.map(p => 
+        `<option value="${p.id}" \( {p.id === state.currentProject ? 'selected' : ''}> \){p.name}</option>`
+      ).join('');
+
+      const list = $('#projectsList');
+      list.innerHTML = state.projects.map(p => `
+        <div class="entry">
+          <div class="entry-left">
+            <div class="entry-project">${p.name}</div>
+          </div>
+          <div class="entry-right">
+            \( {p.id !== 'default' ? `<button class="icon-btn" style="width:36px;height:36px;font-size:1rem;" onclick="deleteProject(' \){p.id}')">🗑️</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    $('#projectSelect').onchange = (e) => {
+      state.currentProject = e.target.value;
+      if (state.active) state.active.project = e.target.value;
+      save();
+    };
+
+    window.deleteProject = function(id) {
+      if (!confirm('¿Eliminar este proyecto?')) return;
+      state.projects = state.projects.filter(p => p.id !== id);
+      if (state.currentProject === id) state.currentProject = 'default';
+      save();
+      updateProjectsUI();
+      toast('Proyecto eliminado');
+    };
+
+    $('#addProjectBtn').onclick = () => {
+      openModal('Nuevo proyecto', `
+        <div class="form-group">
+          <label>Nombre del proyecto / cliente</label>
+          <input type="text" id="newProjectName" placeholder="Ej: Cliente XYZ" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" id="saveProjectBtn">Guardar</button>
+        </div>
+      `);
+      setTimeout(() => {
+        $('#saveProjectBtn').onclick = () => {
+          const name = $('#newProjectName').value.trim();
+          if (!name) return toast('Escribe un nombre');
+          const id = 'p_' + Date.now().toString(36);
+          state.projects.push({ id, name, color: '#3b82f6' });
+          state.currentProject = id;
+          save();
+          closeModal();
+          updateProjectsUI();
+          toast('Proyecto creado');
+        };
+      }, 50);
+    };
+
+    $('#manageProjectsBtn').onclick = () => {
+      \[ ('.nav-item').forEach(n => n.classList.remove('active')); \]('.page').forEach(p => p.classList.remove('active'));
+      document.querySelector('[data-page="projects"]').classList.add('active');
+      $('#page-projects').classList.add('active');
+    };
+
+    // ==================== EXPORT ====================
+    $('#exportBtn').onclick = () => {
+      if (state.entries.length === 0) return toast('No hay datos para exportar');
+      let csv = 'Fecha,Inicio,Fin,Duración (min),Tipo,Proyecto,Nota\n';
+      state.entries.forEach(e => {
+        const proj = state.projects.find(p => p.id === e.project)?.name || 'General';
+        const date = new Date(e.start).toLocaleDateString('es-ES');
+        const start = formatTime(e.start);
+        const end = formatTime(e.end);
+        const mins = Math.round(e.duration / 60000);
+        csv += `"\( {date}"," \){start}","\( {end}", \){mins},"\( {e.type}"," \){proj}","${(e.note||'').replace(/"/g,'""')}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `workagent_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('📤 CSV descargado');
+    };
+
+    // ==================== MODAL ====================
+    function openModal(title, bodyHtml) {
+      $('#modalTitle').textContent = title;
+      $('#modalBody').innerHTML = bodyHtml;
+      $('#modal').classList.add('show');
+    }
+    function closeModal() {
+      $('#modal').classList.remove('show');
+    }
+    $('#closeModal').onclick = closeModal;
+    $('#modal').onclick = (e) => { if (e.target === $('#modal')) closeModal(); };// ==================== SETTINGS ====================
+    $('#settingsBtn').onclick = () => {
+      openModal('Ajustes', `
+        <div class="setting-row">
+          <div>
+            <div style="font-weight:600;">Horas diarias objetivo</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">Para calcular extras</div>
+          </div>
+          <input type="number" id="setDailyHours" value="${state.settings.dailyHours}" min="1" max="16" style="width:70px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);text-align:center;" />
+        </div>
+        <div class="setting-row">
+          <div>
+            <div style="font-weight:600;">Tema oscuro</div>
+          </div>
+          <div class="toggle ${state.theme === 'dark' ? 'on' : ''}" id="toggleTheme"></div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div style="font-weight:600;">Exportar todos los datos</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">Copia de seguridad JSON</div>
+          </div>
+          <button class="btn btn-outline" style="padding:8px 12px;font-size:0.85rem;" id="backupBtn">Backup</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div style="font-weight:600;">Importar datos</div>
+          </div>
+          <button class="btn btn-outline" style="padding:8px 12px;font-size:0.85rem;" id="importBtn">Importar</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div style="font-weight:600;color:var(--danger);">Borrar todos los datos</div>
+          </div>
+          <button class="btn btn-danger" style="padding:8px 12px;font-size:0.85rem;" id="resetBtn">Reset</button>
+        </div>
+        <div class="modal-actions" style="margin-top:20px;">
+          <button class="btn btn-primary" style="width:100%;" id="saveSettingsBtn">Guardar</button>
+        </div>
+      `);
+
+      setTimeout(() => {
+        $('#toggleTheme').onclick = function() {
+          this.classList.toggle('on');
+        };
+        $('#saveSettingsBtn').onclick = () => {
+          state.settings.dailyHours = parseInt($('#setDailyHours').value) || 8;
+          const dark = $('#toggleTheme').classList.contains('on');
+          state.theme = dark ? 'dark' : 'light';
+          applyTheme();
+          save();
+          closeModal();
+          updateUI();
+          toast('Ajustes guardados');
+        };
+        $('#backupBtn').onclick = () => {
+          const data = JSON.stringify(state, null, 2);
+          const blob = new Blob([data], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `workagent_backup_${new Date().toISOString().slice(0,10)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast('Backup descargado');
+        };
+        $('#importBtn').onclick = () => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.json';
+          input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              try {
+                const data = JSON.parse(ev.target.result);
+                if (data.entries && data.projects) {
+                  state = { ...state, ...data };
+                  save();
+                  updateUI();
+                  closeModal();
+                  toast('Datos importados');
+                } else toast('Archivo no válido');
+              } catch(err) { toast('Error al importar'); }
+            };
+            reader.readAsText(file);
+          };
+          input.click();
+        };
+        $('#resetBtn').onclick = () => {
+          if (confirm('¿Seguro que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+          }
+        };
+      }, 50);
+    };
+
+    // ==================== AI INSIGHTS ====================
+    function generateAIInsights() {
+      const insights = [];
+      const weekStart = startOfWeek();
+      const monthStart = startOfMonth();
+      const todayStart = startOfDay();
+      const dailyTargetMs = state.settings.dailyHours * 3600000;
+
+      let weekWork = 0, monthWork = 0, totalWork = 0, todayWork = 0;
+      let weekBreaks = 0;
+      let longSessions = 0;
+      let workDays = new Set();
+      let projectHours = {};
+      let hourOfDay = new Array(24).fill(0);
+
+      state.entries.forEach(e => {
+        if (e.type === 'work') {
+          totalWork += e.duration;
+          workDays.add(new Date(e.start).toDateString());
+          if (e.start >= weekStart) weekWork += e.duration;
+          if (e.start >= monthStart) monthWork += e.duration;
+          if (e.start >= todayStart) todayWork += e.duration;
+          if (e.duration > 4 * 3600000) longSessions++;
+          projectHours[e.project] = (projectHours[e.project] || 0) + e.duration;
+          const h = new Date(e.start).getHours();
+          hourOfDay[h] += e.duration;
+        } else {
+          if (e.start >= weekStart) weekBreaks += e.duration;
+        }
+      });
+
+      if (state.active?.type === 'work') {
+        const cur = Date.now() - state.active.start;
+        totalWork += cur;
+        weekWork += cur;
+        monthWork += cur;
+        todayWork += cur;
+      }
+
+      const activeDaysWeek = [...workDays].filter(d => new Date(d) >= new Date(weekStart)).length;
+      const avgDaily = activeDaysWeek > 0 ? weekWork / activeDaysWeek : 0;
+      const breakRatio = weekWork > 0 ? weekBreaks / weekWork : 0;
+
+      let score = 50;
+      if (activeDaysWeek >= 5) score += 15;
+      else if (activeDaysWeek >= 3) score += 8;
+      if (avgDaily >= dailyTargetMs * 0.9 && avgDaily <= dailyTargetMs * 1.15) score += 20;
+      else if (avgDaily > dailyTargetMs * 1.3) score += 5;
+      else if (avgDaily < dailyTargetMs * 0.6) score -= 10;
+      if (breakRatio >= 0.08 && breakRatio <= 0.2) score += 10;
+      else if (breakRatio < 0.05) score -= 8;
+      if (longSessions > 3) score -= 10;
+      score = Math.max(0, Math.min(100, Math.round(score)));
+
+      $('#aiScore').textContent = score;
+      let scoreLabel = 'Necesita atención';
+      if (score >= 85) scoreLabel = 'Excelente 🔥';
+      else if (score >= 70) scoreLabel = 'Muy bien 👍';
+      else if (score >= 55) scoreLabel = 'Bien, con margen de mejora';
+      else if (score >= 40) scoreLabel = 'Regular';
+      $('#aiScoreLabel').textContent = scoreLabel;
+
+      if (state.entries.length === 0 && !state.active) {
+        insights.push({ type: 'info', icon: '👋', title: '¡Bienvenido!', text: 'Empieza a fichar tus horas. Cuantos más datos tenga, más inteligentes serán mis recomendaciones.' });
+      } else {
+        const weekH = (weekWork / 3600000).toFixed(1);
+        insights.push({ type: 'info', icon: '📊', title: 'Resumen de la semana', text: `Has trabajado ${weekH}h esta semana en \( {activeDaysWeek} día \){activeDaysWeek !== 1 ? 's' : ''}. Media diaria: ${formatDurationShort(avgDaily)}.` });
+      }
+
+      if (avgDaily > dailyTargetMs * 1.25 && activeDaysWeek >= 3) {
+        insights.push({ type: 'warn', icon: '⚠️', title: 'Muchas horas extras', text: `Estás promediando más de ${(state.settings.dailyHours * 1.25).toFixed(1)}h al día. Considera priorizar o delegar para evitar burnout.` });
+      }
+
+      if (activeDaysWeek <= 2 && state.entries.length > 5) {
+        insights.push({ type: 'warn', icon: '📉', title: 'Poca actividad esta semana', text: 'Solo has registrado trabajo en pocos días. Si no es intencional, intenta recuperar el ritmo mañana.' });
+      }
+
+      if (breakRatio >= 0.08 && breakRatio <= 0.18 && weekWork > 5 * 3600000) {
+        insights.push({ type: 'good', icon: '☕', title: 'Buen equilibrio de pausas', text: `Tus pausas representan el ${(breakRatio * 100).toFixed(0)}% del tiempo de trabajo. Es un ratio saludable.` });
+      } else if (breakRatio < 0.05 && weekWork > 8 * 3600000) {
+        insights.push({ type: 'bad', icon: '🛑', title: 'Pocas pausas detectadas', text: 'Estás trabajando casi sin descansos. Las pausas cortas cada 90-120 minutos mejoran el rendimiento.' });
+      }
+
+      if (longSessions >= 3) {
+        insights.push({ type: 'warn', icon: '⏱️', title: 'Sesiones muy largas', text: `Has tenido ${longSessions} sesiones de más de 4 horas seguidas. Dividir el trabajo en bloques más cortos suele aumentar la calidad.` });
+      }
+
+      const projEntries = Object.entries(projectHours);
+      if (projEntries.length >= 2) {
+        projEntries.sort((a, b) => b[1] - a[1]);
+        const top = projEntries[0];
+        const topName = state.projects.find(p => p.id === top[0])?.name || 'General';
+        const pct = totalWork > 0 ? ((top[1] / totalWork) * 100).toFixed(0) : 0;
+        insights.push({ type: 'info', icon: '🎯', title: 'Proyecto principal', text: `"${topName}" concentra el ${pct}% de tus horas.` });
+      }
+
+      let peakHour = 0, peakVal = 0;
+      hourOfDay.forEach((v, i) => { if (v > peakVal) { peakVal = v; peakHour = i; } });
+      if (peakVal > 0) {
+        insights.push({ type: 'good', icon: '🌅', title: 'Tu hora pico', text: `Sueles trabajar más alrededor de las ${peakHour}:00. Programa las tareas más importantes en esa franja.` });
+      }
+
+      if (score < 60) {
+        insights.push({ type: 'info', icon: '💡', title: 'Recomendación principal', text: 'Intenta fichar todos los días laborables, haz al menos una pausa de 10-15 min cada 2 horas y apunta a cumplir tu objetivo diario.' });
+      } else if (score >= 80) {
+        insights.push({ type: 'good', icon: '🏆', title: '¡Vas genial!', text: 'Tus patrones de trabajo son saludables y consistentes. Sigue así.' });
+      }
+
+      const container = $('#aiInsights');
+      if (insights.length === 0) {
+        container.innerHTML = `<div class="empty"><span>🤖</span>Aún no hay suficientes datos para el análisis</div>`;
+      } else {
+        container.innerHTML = insights.map(ins => `
+          <div class="insight-card ${ins.type}">
+            <div class="insight-title">${ins.icon} ${ins.title}</div>
+            <div class="insight-text">${ins.text}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    $('#refreshAiBtn').onclick = () => {
+      generateAIInsights();
+      toast('Análisis actualizado');
+    };// ==================== NAVIGATION ====================
+    \[ ('.nav-item').forEach(btn => {
+      btn.onclick = () => { \]('.nav-item').forEach(n => n.classList.remove('active'));
+        btn.classList.add('active');
+        $$('.page').forEach(p => p.classList.remove('active'));
+        \( (`#page- \){btn.dataset.page}`).classList.add('active');
+        if (btn.dataset.page === 'history') updateHistory();
+        if (btn.dataset.page === 'stats') updateStats();
+        if (btn.dataset.page === 'ai') generateAIInsights();
+      };
+    });
+
+    // ==================== PWA INSTALL ====================
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      $('#installBanner').classList.remove('hidden');
+    });
+
+    $('#installBtn').onclick = async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        $('#installBanner').classList.add('hidden');
+        toast('¡App instalada!');
+      }
+      deferredPrompt = null;
+    };
+
+    // ==================== SERVICE WORKER ====================
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE = 'workagent-v1';
+        self.addEventListener('install', e => {
+          e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './index.html', './manifest.json'])));
+          self.skipWaiting();
+        });
+        self.addEventListener('activate', e => {
+          e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+          self.clients.claim();
+        });
+        self.addEventListener('fetch', e => {
+          e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('./index.html'))));
+        });
+      `;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).catch(() => {});
+    }
+
+    // ==================== INIT ====================
+    load();
+    if (state.active) startTimer();
+    updateUI();
+
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator && state.active?.type === 'work') {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch(e) {}
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && state.active) requestWakeLock();
+    });
+  </script>
+</body>
+</html>
